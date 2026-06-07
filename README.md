@@ -9,45 +9,22 @@ Repo này chứa pipeline **training** và **eval** cho mô hình nhận diện 
 
 ## Mục lục
 
-- [Tổng quan](#tổng-quan)
-- [Các mô hình trong repo](#các-mô-hình-trong-repo)
 - [Training](#training)
   - [PTQ (Post-Training Quantization)](#ptq-post-training-quantization)
   - [Warming-up / Cool-down (QAT-style, quantization-aware fine-tuning)](#warming-up--cool-down-qat-style-quantization-aware-fine-tuning)
 - [Evaluation](#evaluation)
-  - [Verification chuẩn (LFW/CFP_FP/AGEDB_30/CALFW/CPLFW)](#verification-chuẩn-lfwcfp_fpagedb_30calfwcplfw)
-  - [IJB-C evaluation](#ijb-c-evaluation)
-- [Face recognition realtime (demo)](#face-recognition-realtime-demo)
-- [Cấu hình & threshold](#cấu-hình--threshold)
-- [Yêu cầu môi trường](#yêu-cầu-môi-trường)
+  - [Verification chuẩn (LFW/CFP_FP/AGEDB_30/CALFW/CPLFW)]
 
 ---
 
 ## Tổng quan
 
-Pipeline được chia thành 3 khối chính:
+Pipeline được chia thành 2 khối chính:
 
 1. **Training / fine-tuning / PTQ** để tạo model FP32 và model quantized (ví dụ Q6).
 2. **Evaluation** trên các benchmark verification (LFW/CFP_FP/…) và IJB-C.
-3. **Realtime demo** (script `main.py`) để chạy webcam và nhận diện dựa trên embedding + database đã lưu.
 
----
 
-## Các mô hình trong repo
-
-Repo có nhiều script cho các backbone, trong đó nổi bật:
-
-- **iResNet18 / iResNet50**
-- **MobileFaceNet**
-
-Trong `training/` và `eval/` bạn thấy các file pattern tương tự:
-
-- `training/ptq/*.py`
-- `training/w0-3p/*.py`, `training/w-3p/*.py`
-- `eval/eval_iresnet18.py`, `eval/eval_iresnet50.py`, `eval/eval_mobilefacenet.py`
-- `eval/eval_IJB-C.py`
-
----
 
 ## Training
 
@@ -143,92 +120,4 @@ Pipeline:
 
 Trong `eval/eval_iresnet18.py`, code có sẵn ví dụ so sánh:
 - `FP32_PATH` vs `Q16_PATH` và gọi `eval_model(Q16_PATH, "Q6", bit=6)`.
-
----
-
-### IJB-C evaluation
-
-**File ví dụ:** `eval/eval_IJB-C.py`
-
-Pipeline theo từng bước:
-
-1. Load quantized model (ví dụ iResNet18 Q6) tương tự `eval_iresnet18.py`.
-2. Dùng **RetinaFace** thông qua `insightface.app.FaceAnalysis` để detect landmark.
-3. **Align** template:
-   - đọc ảnh `loose_crop`
-   - lấy landmark `face.kps`
-   - ước lượng similarity transform về mốc 5 điểm
-   - warp về 112x112 và lưu vào `aligned/`
-4. Extract features:
-   - đọc aligned images
-   - dùng **flip** (ảnh lật ngang) và cộng feature của 2 hướng
-   - normalize embedding
-5. Build template pooling:
-   - gom theo `template id`
-   - mỗi media được lấy trung bình embedding
-   - template feature = sum(media_feats)
-   - normalize template feature
-6. Score cho mỗi pair `(t1, t2)` bằng dot product cosine similarity.
-7. Với từng FAR mục tiêu (1e-4, 1e-5, 1e-6), tính TAR bằng ROC curve.
-
----
-
-## Face recognition realtime (demo)
-
-**File ví dụ:** `main.py`
-
-Demo chạy webcam để:
-
-1. Load quantized model qua `utils/model_loader.py`.
-2. Load database embedding từ `face_database.pkl` thông qua `utils/database.py`.
-3. Detect face (`utils/face_detector.py`).
-4. Lấy embedding (`utils/embedding.py`).
-5. Match embedding với database và hiển thị `name (similarity)`.
-6. Cho phép:
-   - Nhấn **Q** để thoát
-   - Nhấn **S** để lưu ảnh debug.
-
----
-
-## Cấu hình & threshold
-
-**File:** `config.py`
-
-Thông tin quan trọng:
-
-- `MODEL_PATH`: đường dẫn checkpoint quantized (ví dụ `models/iresnet18_q6.pth`).
-- `SIMILARITY_THRESHOLD = 0.25`
-  - Đây là threshold để decide “Unknown” trong realtime demo.
-- `CAMERA_ID`, `FRAME_WIDTH`, `FRAME_HEIGHT`.
-
----
-
-## Yêu cầu môi trường
-
-**File:** `requirements.txt`
-
-Các package chính:
-- `torch`, `torchvision`
-- `opencv-python`
-- `numpy`
-- `Pillow`
-- `tqdm`
-
----
-
-## Gợi ý workflow end-to-end
-
-1. **Chọn backbone** (iResNet18/iResNet50/MobileFaceNet)
-2. **Training**
-   - Nếu muốn nhanh: chạy `training/ptq/*` (PTQ)
-   - Nếu muốn accuracy cao hơn: chạy `training/w*-3p/*` hoặc `training/w0-3p/*` (fine-tuning quantized)
-3. **Evaluation**
-   - Verification: `eval/eval_iresnet18.py`, `eval/eval_iresnet50.py`, `eval/eval_mobilefacenet.py`
-   - IJB-C: `eval/eval_IJB-C.py`
-4. **Realtime demo**
-   - đảm bảo `config.py` trỏ đúng `MODEL_PATH`
-   - đảm bảo database `face_database.pkl` đã được tạo
-
----
-
 
