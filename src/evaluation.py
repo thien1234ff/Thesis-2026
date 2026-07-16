@@ -1,8 +1,3 @@
-# ============================================================
-# FULL EVAL SCRIPT: FP32 vs Q16
-# ============================================================
-
-import os
 import io
 import pickle
 import numpy as np
@@ -12,22 +7,26 @@ from PIL import Image
 import torchvision.transforms as transforms
 from sklearn.metrics import roc_curve
 
-from backbones.iresnet import iresnet18, quantize_model
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device:", device)
-
 # ============================================================
-# 1. LOAD BIN (InsightFace format)
+# 1. LOAD INSIGHTFACE BIN BINARY FORMAT
 # ============================================================
 
 def decode_bin_image(bin_item):
+    """Decodes raw bytes image from bin file to PIL RGB image."""
     img = Image.open(io.BytesIO(bin_item)).convert("RGB")
     img = img.resize((112, 112), Image.BILINEAR)
     return img
 
 
 def load_bin(bin_path):
+    """Loads a verification bin file (e.g. lfw.bin) and prepares it as a tensor.
+    
+    Args:
+        bin_path (str): Absolute path to the .bin file.
+        
+    Returns:
+        tuple: (images_tensor, is_same_array)
+    """
     with open(bin_path, "rb") as f:
         bins, issame = pickle.load(f, encoding="bytes")
 
@@ -48,17 +47,28 @@ def load_bin(bin_path):
 
 
 # ============================================================
-# 2. EXTRACT EMBEDDINGS (WITH FLIP TEST)
+# 2. EXTRACT EMBEDDINGS (WITH OPTIONAL FLIP TEST)
 # ============================================================
 
 @torch.no_grad()
-def extract_embeddings(model, images, batch_size=128, use_flip=True):
+def extract_embeddings(model, images, batch_size=128, use_flip=True, device="cuda"):
+    """Extracts normalization embeddings from the model.
+    
+    Args:
+        model (nn.Module): The evaluation backbone.
+        images (torch.Tensor): Preprocessed images of shape (N, 3, 112, 112).
+        batch_size (int): Size of batches for forward pass.
+        use_flip (bool): Enable horizontal flip test augmentation.
+        device (str): Device to run inference on.
+        
+    Returns:
+        np.ndarray: Extracted embeddings of shape (N, Dim).
+    """
     model.eval()
     embeddings = []
 
     for i in range(0, len(images), batch_size):
         batch = images[i:i+batch_size].to(device)
-
         feat = model(batch)
 
         if use_flip:
@@ -73,10 +83,22 @@ def extract_embeddings(model, images, batch_size=128, use_flip=True):
 
 
 # ============================================================
-# 3. 10-FOLD VERIFICATION
+# 3. 10-FOLD VERIFICATION ACCURACY
 # ============================================================
 
 def evaluate_10fold(embeddings, issame, folds=10):
+    """Performs 10-fold cross-validation to find the optimal cosine threshold
+    and evaluate verification accuracy.
+    
+    Args:
+        embeddings (np.ndarray): Extracted embeddings of shape (2*N, Dim).
+        issame (np.ndarray): Boolean array of matches of shape (N,).
+        folds (int): Number of folds for cross-validation.
+        
+    Returns:
+        tuple: (mean_accuracy, std_accuracy)
+    """
+    # Split into pairs
     emb1 = embeddings[0::2]
     emb2 = embeddings[1::2]
 
@@ -94,6 +116,7 @@ def evaluate_10fold(embeddings, issame, folds=10):
         test_idx = indices[start:end]
         train_idx = np.concatenate([indices[:start], indices[end:]])
 
+        # Train: Find best threshold
         sims_train = np.sum(emb1[train_idx] * emb2[train_idx], axis=1)
         labels_train = issame[train_idx]
 
@@ -106,102 +129,43 @@ def evaluate_10fold(embeddings, issame, folds=10):
                 best_acc = acc
                 best_th = th
 
+        # Test: Evaluate accuracy using the best threshold
         sims_test = np.sum(emb1[test_idx] * emb2[test_idx], axis=1)
         labels_test = issame[test_idx]
 
         acc = np.mean((sims_test > best_th) == labels_test)
         accs.append(acc)
 
-    return np.mean(accs), np.std(accs)
+    return float(np.mean(accs)), float(np.std(accs))
 
 
 # ============================================================
-# 4. TAR@FAR
+# 4. TAR@FAR METRIC
 # ============================================================
 
 def tar_at_far(embeddings, issame, target_far=1e-4):
+    """Computes True Acceptance Rate (TAR) at a target False Acceptance Rate (FAR).
+    
+    Args:
+        embeddings (np.ndarray): Extracted embeddings of shape (2*N, Dim).
+        issame (np.ndarray): Boolean array of matches of shape (N,).
+        target_far (float): Target FAR threshold (e.g. 1e-4).
+        
+    Returns:
+        float: Computed TAR value.
+    """
     emb1 = embeddings[0::2]
     emb2 = embeddings[1::2]
     labels = issame.astype(int)
 
+    # Cosine similarities
     scores = np.sum(emb1 * emb2, axis=1)
 
+    # Compute ROC Curve
     fpr, tpr, _ = roc_curve(labels, scores)
 
     if target_far > max(fpr):
         return 0.0
 
-    return np.interp(target_far, fpr, tpr)
-
-
-# ============================================================
-# 5. LOAD MODEL
-# ============================================================
-
-def load_backbone(weight_path, bit="fp32"):
-
-    if bit == "fp32":
-        model = iresnet18(num_features=512)
-    else:
-        model = quantize_model(
-            iresnet18(num_features=512),
-            weight_bit=bit,
-            act_bit=bit
-        )
-
-    state = torch.load(weight_path, map_location="cpu")
-
-    # remove backbone. prefix if exists
-    if any(k.startswith("backbone.") for k in state.keys()):
-        state = {k.replace("backbone.", ""): v for k, v in state.items()}
-
-    model.load_state_dict(state, strict=False)
-    model.to(device)
-    model.eval()
-
-    return model
-
-
-# ============================================================
-# 6. EVALUATION WRAPPER
-# ============================================================
-
-def eval_model(weight_path, name, bit="fp32"):
-
-    print(f"\n==============================")
-    print(f"Evaluating: {name}")
-    print(f"==============================")
-
-    model = load_backbone(weight_path, bit)
-
-    datasets = {
-        "LFW": "/kaggle/input/datasets/debarghamitraroy/msm1-retinaface-t1/eval/lfw.bin",
-        "CFP_FP": "/kaggle/input/datasets/debarghamitraroy/msm1-retinaface-t1/eval/cfp_fp.bin",
-        "AGEDB_30": "/kaggle/input/datasets/debarghamitraroy/msm1-retinaface-t1/eval/agedb_30.bin",
-        "CALFW": "/kaggle/input/datasets/debarghamitraroy/msm1-retinaface-t1/eval/calfw.bin",
-        "CPLFW": "/kaggle/input/datasets/debarghamitraroy/msm1-retinaface-t1/eval/cplfw.bin",
-    }
-
-    for ds, bin_path in datasets.items():
-        images, issame = load_bin(bin_path)
-
-        emb = extract_embeddings(model, images)
-
-        mean, std = evaluate_10fold(emb, issame)
-        tar = tar_at_far(emb, issame, target_far=1e-4)
-
-        print(
-            f"{ds:10s}: "
-            f"Acc={mean*100:.3f}% ± {std*100:.3f}% | "
-            f"TAR@1e-4={tar*100:.3f}%"
-        )
-
-
-# ============================================================
-# 7. RUN COMPARISON
-# ============================================================
-
-FP32_PATH = "/kaggle/input/datasets/hhongeeee/ms1mv2-pretrain/181952backbone.pth"
-Q16_PATH = "/kaggle/input/datasets/hhongeeee/beta300/iresnet18_q6_epoch29 (1).pth"
-
-eval_model(Q16_PATH, "Q6", bit=6)
+    # Interpolate to find TPR (TAR) at target FPR (FAR)
+    return float(np.interp(target_far, fpr, tpr))

@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.ipynb_checkpoints/
+.pytest_cache/
+.vscode/
+.idea/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Model Checkpoints (excluding SSD configurations)
+*.pth
+*.pt
+*.zip
+*.tar.gz
+models/res10_300x300_ssd_iter_140000.caffemodel
+weights/
+
+# Datasets and Binaries
+final_dataset/
+*.bin
+*.npy
+*.xlsx
+
+# Document Drafts
+*.docx
+*.pptx
+*.pdf
