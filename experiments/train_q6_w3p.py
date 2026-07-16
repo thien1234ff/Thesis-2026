@@ -68,8 +68,8 @@ def main():
     use_synthetic = args.dry_run or not os.path.exists(args.data_dir) or len(os.listdir(args.data_dir)) == 0
     
     if use_synthetic:
-        print("💡 [INFO] Real training image dataset folder not found or empty.")
-        print("👉 Running in DRY-RUN mode using dynamically generated synthetic face dataset.")
+        print("[INFO] Real training image dataset folder not found or empty.")
+        print("[INFO] Running in DRY-RUN mode using dynamically generated synthetic face dataset.")
         trainset = SyntheticFaceDataset(num_classes=5, num_images_per_class=20, transform=transform)
         train_loader = DataLoader(trainset, batch_size=4, shuffle=True, drop_last=True)
         epochs = 2
@@ -102,7 +102,7 @@ def main():
         print(f"Loading teacher weights from: {args.teacher_weights}")
         teacher.load_state_dict(torch.load(args.teacher_weights, map_location=device), strict=False)
     else:
-        print("⚠️ Teacher weights not found. Initializing teacher randomly for structure checkout.")
+        print("[WARNING] Teacher weights not found. Initializing teacher randomly for structure checkout.")
         
     # 2. Initialize Student Model (Quantized)
     if args.arch == "iresnet18":
@@ -138,7 +138,7 @@ def main():
     )
     
     engine.train(save_dir=args.save_dir, model_prefix=args.arch)
-    print("🎉 Training finished successfully!")
+    print("[SUCCESS] Training finished successfully!")
 
 if __name__ == "__main__":
     main()

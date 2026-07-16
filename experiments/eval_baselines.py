@@ -79,8 +79,8 @@ def main():
             break
             
     if missing_data:
-        print("💡 [INFO] InsightFace validation binaries not found in 'data/' directory.")
-        print("👉 Displaying verified baseline experimental results from the Thesis Report (Table 4.1).")
+        print("[INFO] InsightFace validation binaries not found in 'data/' directory.")
+        print("[INFO] Displaying verified baseline experimental results from the Thesis Report (Table 4.1).")
         print("To run a live evaluation, please refer to 'data/README.md' to download the verification bin files.")
         
         for arch in ["iresnet18", "iresnet50", "mobilefacenet"]:
@@ -88,7 +88,7 @@ def main():
         return
 
     # If data is present, run actual evaluation on PyTorch
-    print("🚀 Validation datasets detected! Running live evaluation...")
+    print("[INFO] Validation datasets detected! Running live evaluation...")
     archs = {
         "iresnet18": iresnet18,
         "iresnet50": iresnet50,

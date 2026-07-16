@@ -35,7 +35,7 @@ def analyze_convergence():
     print("Total Training Iterations    |  180,000                     |  12,540                     ")
     print("Normalized Iterations (BS=512)|  180,000                     |  3,135                      ")
     print("-----------------------------+------------------------------+-----------------------------")
-    print("⚡ ACCELERATION RATIO        |  1.0x (Baseline)             |  57.4x FASTER CONVERGENCE   ")
+    print("ACCELERATION RATIO           |  1.0x (Baseline)             |  57.4x FASTER CONVERGENCE   ")
     print("==========================================================================================")
     
     print("\nNote: By using targeted real images containing high facial variation (pose and age)")

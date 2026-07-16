@@ -93,7 +93,7 @@ def generate_ablation_chart(arch, output_path="ablation_beta.png"):
     
     plt.tight_layout()
     plt.savefig(output_path)
-    print(f"📈 Ablation chart saved to: {output_path}")
+    print(f"[INFO] Ablation chart saved to: {output_path}")
     plt.close()
 
 if __name__ == "__main__":

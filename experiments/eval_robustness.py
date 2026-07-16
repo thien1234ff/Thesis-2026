@@ -42,7 +42,7 @@ def print_robustness_summary(arch):
         val_w3p = data["Q6_w_3p"][ds]
         
         # Highlight cases where our w-3p model matches or outperforms FP32
-        note = " 🚀 [Exceeds FP32]" if val_w3p >= val_fp32 else ""
+        note = " * [Exceeds FP32]" if val_w3p >= val_fp32 else ""
         
         print(f"{ds:12s} |  {val_fp32:.3f}%     |  {val_ptq:.3f}%     |  {val_wo3p:.3f}%     |  {val_w3p:.3f}%{note}")
     print(f"==========================================================================================")
@@ -73,7 +73,7 @@ def generate_robustness_chart(arch, output_path="robustness_chart.png"):
     
     plt.tight_layout()
     plt.savefig(output_path)
-    print(f"📈 Robustness comparison saved to: {output_path}")
+    print(f"[INFO] Robustness comparison saved to: {output_path}")
     plt.close()
 
 if __name__ == "__main__":
