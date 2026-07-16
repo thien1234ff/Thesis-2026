@@ -68,6 +68,81 @@ WEIGHTS_MAP = {
 }
 
 # --------------------------------------------------
+# THESIS VERIFIED STATIC DATA
+# --------------------------------------------------
+THESIS_TABLE = {
+    "iresnet18": {
+        "FP32": {
+            "Accuracy": {"LFW": 99.617, "CFP-FP": 93.671, "AgeDB-30": 96.687, "CALFW": 95.533, "CPLFW": 89.183},
+            "TAR@1e-4": {"LFW": 99.133, "CFP-FP": 77.686, "AgeDB-30": 84.967, "CALFW": 85.000, "CPLFW": 50.733}
+        },
+        "Q6_PTQ": {
+            "Accuracy": {"LFW": 99.500, "CFP-FP": 92.671, "AgeDB-30": 96.633, "CALFW": 95.283, "CPLFW": 87.733},
+            "TAR@1e-4": {"LFW": 99.033, "CFP-FP": 71.429, "AgeDB-30": 84.000, "CALFW": 83.300, "CPLFW": 56.933}
+        }
+    },
+    "iresnet50": {
+        "FP32": {
+            "Accuracy": {"LFW": 99.800, "CFP-FP": 95.957, "AgeDB-30": 97.983, "CALFW": 96.083, "CPLFW": 92.217},
+            "TAR@1e-4": {"LFW": 99.600, "CFP-FP": 88.914, "AgeDB-30": 92.900, "CALFW": 90.500, "CPLFW": 53.533}
+        },
+        "Q6_PTQ": {
+            "Accuracy": {"LFW": 99.683, "CFP-FP": 91.557, "AgeDB-30": 96.083, "CALFW": 95.133, "CPLFW": 87.017},
+            "TAR@1e-4": {"LFW": 98.500, "CFP-FP": 67.343, "AgeDB-30": 76.400, "CALFW": 82.833, "CPLFW": 0.100}
+        }
+    },
+    "mobilefacenet": {
+        "FP32": {
+            "Accuracy": {"LFW": 99.433, "CFP-FP": 91.529, "AgeDB-30": 95.567, "CALFW": 95.150, "CPLFW": 87.800},
+            "TAR@1e-4": {"LFW": 98.167, "CFP-FP": 65.857, "AgeDB-30": 74.500, "CALFW": 84.700, "CPLFW": 9.600}
+        },
+        "Q6_PTQ": {
+            "Accuracy": {"LFW": 98.150, "CFP-FP": 83.400, "AgeDB-30": 89.267, "CALFW": 91.067, "CPLFW": 77.017},
+            "TAR@1e-4": {"LFW": 91.600, "CFP-FP": 25.286, "AgeDB-30": 24.600, "CALFW": 49.600, "CPLFW": 0.067}
+        }
+    }
+}
+
+ABLATION_DATA = {
+    "iresnet18": {
+        "Accuracy": {
+            1: {"LFW": 99.517, "CFP-FP": 92.486, "AgeDB-30": 96.717, "CALFW": 95.417, "CPLFW": 88.917},
+            200: {"LFW": 99.467, "CFP-FP": 93.214, "AgeDB-30": 96.450, "CALFW": 95.483, "CPLFW": 88.983},
+            300: {"LFW": 99.550, "CFP-FP": 92.857, "AgeDB-30": 96.783, "CALFW": 95.500, "CPLFW": 88.400}
+        },
+        "TAR": {
+            1: {"LFW": 99.067, "CFP-FP": 71.086, "AgeDB-30": 77.300, "CALFW": 87.267, "CPLFW": 53.100},
+            200: {"LFW": 99.033, "CFP-FP": 73.029, "AgeDB-30": 87.900, "CALFW": 84.933, "CPLFW": 25.700},
+            300: {"LFW": 99.133, "CFP-FP": 76.543, "AgeDB-30": 85.633, "CALFW": 85.533, "CPLFW": 25.067}
+        }
+    },
+    "iresnet50": {
+        "Accuracy": {
+            1: {"LFW": 99.733, "CFP-FP": 94.257, "AgeDB-30": 97.333, "CALFW": 95.833, "CPLFW": 90.433},
+            200: {"LFW": 99.767, "CFP-FP": 95.043, "AgeDB-30": 97.683, "CALFW": 95.817, "CPLFW": 91.767},
+            300: {"LFW": 99.750, "CFP-FP": 95.488, "AgeDB-30": 97.567, "CALFW": 95.767, "CPLFW": 91.550}
+        },
+        "TAR": {
+            1: {"LFW": 98.933, "CFP-FP": 81.343, "AgeDB-30": 74.233, "CALFW": 88.367, "CPLFW": 36.000},
+            200: {"LFW": 99.333, "CFP-FP": 81.943, "AgeDB-30": 92.700, "CALFW": 89.333, "CPLFW": 37.000},
+            300: {"LFW": 99.333, "CFP-FP": 85.657, "AgeDB-30": 91.867, "CALFW": 88.333, "CPLFW": 31.000}
+        }
+    },
+    "mobilefacenet": {
+        "Accuracy": {
+            1: {"LFW": 98.700, "CFP-FP": 88.257, "AgeDB-30": 92.567, "CALFW": 93.367, "CPLFW": 84.733},
+            200: {"LFW": 99.183, "CFP-FP": 90.443, "AgeDB-30": 93.883, "CALFW": 94.033, "CPLFW": 86.450},
+            300: {"LFW": 99.317, "CFP-FP": 90.514, "AgeDB-30": 93.867, "CALFW": 93.650, "CPLFW": 86.600}
+        },
+        "TAR": {
+            1: {"LFW": 94.100, "CFP-FP": 40.629, "AgeDB-30": 31.267, "CALFW": 72.533, "CPLFW": 2.000},
+            200: {"LFW": 94.400, "CFP-FP": 62.914, "AgeDB-30": 44.400, "CALFW": 73.200, "CPLFW": 1.400},
+            300: {"LFW": 95.900, "CFP-FP": 56.857, "AgeDB-30": 40.100, "CALFW": 72.300, "CPLFW": 4.033}
+        }
+    }
+}
+
+# --------------------------------------------------
 # CORE FUNCTIONS
 # --------------------------------------------------
 
@@ -301,7 +376,6 @@ with tab_showroom:
     sel_baseline = st.selectbox("Select model for baseline view", baseline_options)
     
     # Display baseline data as a table
-    from experiments.eval_baselines import THESIS_TABLE
     b_data = THESIS_TABLE[sel_baseline]
     
     baseline_rows = []
@@ -319,7 +393,6 @@ with tab_showroom:
     st.subheader("2. Optimization of Gradient coordination Parameter Beta (Table 4.2 & 4.3)")
     st.write("Varying the gradient multiplier weight beta from 1 (uncoordinated) to 300 (optimal target alignment).")
     
-    from experiments.ablation_beta import ABLATION_DATA
     sel_ablation = st.selectbox("Select model for Beta ablation view", baseline_options)
     a_data = ABLATION_DATA[sel_ablation]
     
