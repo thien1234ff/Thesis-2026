@@ -1,6 +1,7 @@
 import copy
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Function
 from torch.nn import Module, Parameter
 from collections import OrderedDict
